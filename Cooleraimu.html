@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cyber Phone Cooler Lab & Reverse Calculator</title>
+    <style>
+        :root {
+            --bg-color: #0b0f19;
+            --card-bg: #131c2e;
+            --accent-cyan: #00f3ff;
+            --accent-pink: #ff0055;
+            --accent-green: #00ff66;
+            --text-main: #f0f6fc;
+            --text-muted: #8b949e;
+            --border-color: #1f304f;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Courier New', Courier, monospace; }
+        body { background-color: var(--bg-color); color: var(--text-main); padding: 15px; max-width: 600px; margin: 0 auto; }
+        h1 { text-align: center; color: var(--accent-cyan); font-size: 1.2rem; margin-bottom: 3px; text-transform: uppercase; letter-spacing: 1px; }
+        .subtitle { text-align: center; color: var(--text-muted); font-size: 0.7rem; margin-bottom: 12px; }
+        
+        .mode-tabs { display: flex; gap: 8px; margin-bottom: 12px; }
+        .tab-btn { flex: 1; background: var(--card-bg); border: 1px solid var(--border-color); color: var(--text-muted); padding: 8px; font-weight: bold; cursor: pointer; border-radius: 6px; text-align: center; font-size: 0.8rem; transition: 0.2s; }
+        .tab-btn.active { background: rgba(0,243,255,0.1); border-color: var(--accent-cyan); color: var(--accent-cyan); }
+
+        .card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 6px; padding: 10px; margin-bottom: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.4); }
+        .card-title { font-size: 0.8rem; color: var(--accent-cyan); margin-bottom: 6px; font-weight: bold; }
+        
+        label { display: block; font-size: 0.7rem; color: var(--text-muted); margin-bottom: 3px; }
+        select, input { width: 100%; background: #080c14; border: 1px solid var(--border-color); color: var(--text-main); padding: 7px; border-radius: 5px; font-size: 0.8rem; margin-bottom: 6px; }
+        select:focus, input:focus { border-color: var(--accent-cyan); outline: none; }
+
+        .telemetry-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; margin-top: 8px; }
+        .tele-box { background: #080c14; border: 1px solid var(--border-color); padding: 6px; border-radius: 5px; text-align: center; }
+        .tele-val { font-size: 1rem; font-weight: bold; color: var(--accent-green); margin-top: 2px; }
+        
+        .btn-run { width: 100%; background: linear-gradient(135deg, var(--accent-cyan), #0077ff); color: #000; border: none; padding: 10px; font-weight: bold; font-size: 0.85rem; border-radius: 5px; cursor: pointer; text-transform: uppercase; margin-top: 5px; }
+        .btn-run:active { opacity: 0.8; }
+
+        .hidden { display: none; }
+        .result-box { background: #080c14; border: 1px dashed var(--accent-cyan); padding: 8px; border-radius: 5px; margin-top: 8px; font-size: 0.75rem; line-height: 1.4; }
+    </style>
+</head>
+<body>
+
+    <h1>Cyber Cooler Lab</h1>
+    <div class="subtitle">Full Component Simulator & Reverse Configurator</div>
+
+    <div class="mode-tabs">
+        <div class="tab-btn active" id="btnManual" onclick="switchMode('manual')">Manual Rakit</div>
+        <div class="tab-btn" id="btnReverse" onclick="switchMode('reverse')">Saran Target Watt</div>
+    </div>
+
+    <!-- MANUAL MODE -->
+    <div id="sectionManual">
+        <div class="card">
+            <div class="card-title">1. Suhu Ruangan (Ambient)</div>
+            <input type="range" id="ambientTemp" min="20" max="40" value="28" oninput="document.getElementById('lblAmbient').innerText = this.value + ' °C'; saveData(); calculateManual();">
+            <div style="text-align: right; font-size: 0.75rem; color: var(--accent-cyan);" id="lblAmbient">28 °C</div>
+        </div>
+
+        <div class="card">
+            <div class="card-title">2. Sumber Daya / Power Input</div>
+            <select id="selPower" onchange="saveData(); calculateManual();">
+                <option value="15|3">Charger HP Standar (5V 3A - 15W)</option>
+                <option value="27|3">USB-C PD Decoy (9V 3A - 27W)</option>
+                <option value="36|3">USB-C PD Decoy (12V 3A - 36W)</option>
+                <option value="45|3">USB-C PD Decoy (15V 3A - 45W)</option>
+                <option value="60|3">Decoy Trigger Switch (Fixed/Selectable 5V/9V/12V/20V @ 3A - 60W)</option>
+                <option value="45|3.5">GaN Charger (45W PPS)</option>
+                <option value="65|5">GaN Charger (65W PPS)</option>
+            </select>
+        </div>
+
+        <div class="card">
+            <div class="card-title">3. Modul Peltier</div>
+            <select id="selPeltier" onchange="saveData(); calculateManual();">
+                <option value="25|15|4|TEC1-12702">TEC1-12702 (Standard 4x4)</option>
+                <option value="28|16|5|TEC1-12702 SENIOR">TEC1-12702 SENIOR (40x40x5mm)</option>
+                <option value="30|17|5|TEC4040010D">TEC4040010D (High Spec)</option>
+                <option value="28|16|4|TEC1-12703">TEC1-12703</option>
+                <option value="45|20|4|TEC1-12705">TEC1-12705</option>
+                <option value="60|25|4|TEC1-12706">TEC1-12706 (Monster 12V 6A)</option>
+                <option value="120|32|5|TEC1-12715">TEC1-12715 (Extreme Power 15A)</option>
+                <option value="50|22|6|TEC2-19003">TEC2-19003 (Dual Layer)</option>
+                <option value="35|18|4|ARCTIC S04049">ARCTIC S04049</option>
+            </select>
+        </div>
+
+        <div class="card">
+            <div class="card-title">4. Heatsink Sisi Panas</div>
+            <select id="selHeatsink" onchange="saveData(); calculateManual();">
+                <option value="25|15">Heatsink Alumunium Mini (Berat: 25g)</option>
+                <option value="25|15">Heatsink Alumunium Bersirip 4x4cm (Berat: 25g)</option>
+                <option value="40|20">Heatsink Alumunium Bersirip 5x5cm (Berat: 40g)</option>
+                <option value="60|25">Heatsink Alumunium Bersirip 6x6cm (Berat: 60g)</option>
+                <option value="90|35">Heatsink Tower/CPU Mini (Berat: 90g)</option>
+            </select>
+        </div>
+
+        <div class="card">
+            <div class="card-title">5. Kipas Pendingin (Fan)</div>
+            <select id="selFan" onchange="saveData(); calculateManual();">
+                <option value="15|12">Fan 40x40mm Standard</option>
+                <option value="20|15">Fan 50x50mm High RPM</option>
+                <option value="30|20">Fan 60x60mm Heavy Duty</option>
+            </select>
+        </div>
+
+        <div class="card">
+            <div class="card-title">Telemetry & Real-Time Estimator</div>
+            <div class="telemetry-grid">
+                <div class="tele-box"><label>REAL-TIME WATT</label><div class="tele-val" id="resWatt">0.0 W</div></div>
+                <div class="tele-box"><label>REAL-TIME AMPERE</label><div class="tele-val" id="resAmp">0.0 A</div></div>
+                <div class="tele-box"><label>EST. BOBOT FISIK</label><div class="tele-val" id="resWeight" style="color:var(--accent-cyan)">0 gram</div></div>
+                <div class="tele-box"><label>EST. KETEBALAN</label><div class="tele-val" id="resThick" style="color:var(--accent-pink)">0 mm</div></div>
+            </div>
+            <button class="btn-run" onclick="runTest()">Jalankan Test Run</button>
+            <div id="testResultBox" class="result-box hidden"></div>
+        </div>
+    </div>
+
+    <!-- REVERSE MODE -->
+    <div id="sectionReverse" class="hidden">
+        <div class="card">
+            <div class="card-title">Target Daya Maksimal (Watt)</div>
+            <input type="number" id="targetWatt" value="30" placeholder="Contoh: 30" oninput="saveData()">
+            <button class="btn-run" onclick="runReverse()">Rekomendasikan Racikan</button>
+            <div id="reverseResult" class="result-box hidden"></div>
+        </div>
+    </div>
+
+    <script>
+        function switchMode(mode) {
+            if(mode === 'manual') {
+                document.getElementById('sectionManual').classList.remove('hidden');
+                document.getElementById('sectionReverse').classList.add('hidden');
+                document.getElementById('btnManual').classList.add('active');
+                document.getElementById('btnReverse').classList.remove('active');
+            } else {
+                document.getElementById('sectionManual').classList.add('hidden');
+                document.getElementById('sectionReverse').classList.remove('hidden');
+                document.getElementById('btnManual').classList.remove('active');
+                document.getElementById('btnReverse').classList.add('active');
+            }
+            localStorage.setItem('activeTab', mode);
+        }
+
+        function saveData() {
+            localStorage.setItem('ambientTemp', document.getElementById('ambientTemp').value);
+            localStorage.setItem('selPower', document.getElementById('selPower').value);
+            localStorage.setItem('selPeltier', document.getElementById('selPeltier').value);
+            localStorage.setItem('selHeatsink', document.getElementById('selHeatsink').value);
+            localStorage.setItem('selFan', document.getElementById('selFan').value);
+            localStorage.setItem('targetWatt', document.getElementById('targetWatt').value);
+        }
+
+        function loadData() {
+            if(localStorage.getItem('ambientTemp')) {
+                document.getElementById('ambientTemp').value = localStorage.getItem('ambientTemp');
+                document.getElementById('lblAmbient').innerText = document.getElementById('ambientTemp').value + ' °C';
+            }
+            if(localStorage.getItem('selPower')) document.getElementById('selPower').value = localStorage.getItem('selPower');
+            if(localStorage.getItem('selPeltier')) document.getElementById('selPeltier').value = localStorage.getItem('selPeltier');
+            if(localStorage.getItem('selHeatsink')) document.getElementById('selHeatsink').value = localStorage.getItem('selHeatsink');
+            if(localStorage.getItem('selFan')) document.getElementById('selFan').value = localStorage.getItem('selFan');
+            if(localStorage.getItem('targetWatt')) document.getElementById('targetWatt').value = localStorage.getItem('targetWatt');
+            
+            let savedTab = localStorage.getItem('activeTab');
+            if(savedTab) switchMode(savedTab);
+        }
+
+        function calculateManual() {
+            let pwr = document.getElementById('selPower').value.split('|');
+            let pel = document.getElementById('selPeltier').value.split('|');
+            let hs = document.getElementById('selHeatsink').value.split('|');
+            let fan = document.getElementById('selFan').value.split('|');
+
+            let maxPower = parseFloat(pwr[0]);
+            let reqWatt = parseFloat(pel[0]);
+            let currentWatt = Math.min(maxPower, reqWatt);
+            let currentAmp = (currentWatt / 12).toFixed(1);
+
+            let totalWeight = parseInt(hs[0]) + parseInt(fan[0]) + 35; 
+            let totalThick = parseFloat(pel[2]) + parseFloat(hs[1]) + parseFloat(fan[1]) + 5;
+
+            document.getElementById('resWatt').innerText = currentWatt.toFixed(1) + ' W';
+            document.getElementById('resAmp').innerText = currentAmp + ' A';
+            document.getElementById('resWeight').innerText = totalWeight + ' gram';
+            document.getElementById('resThick').innerText = totalThick.toFixed(1) + ' mm';
+        }
+
+        function runTest() {
+            let ambient = parseFloat(document.getElementById('ambientTemp').value);
+            let pel = document.getElementById('selPeltier').value.split('|');
+            let deltaT = parseFloat(pel[1]);
+            let coldSide = ambient - deltaT;
+
+            let desc = "";
+            let color = "var(--accent-cyan)";
+            if(coldSide <= -5) { desc = "Sangat Dingin Ekstrem (Potensi Embun/Kondensasi!)"; color = "var(--accent-cyan)"; }
+            else if(coldSide <= 5) { desc = "Dingin Nyaman & Efektif untuk Gaming"; color = "var(--accent-green)"; }
+            else if(coldSide <= 15) { desc = "Hangat / Pendinginan Kurang Maksimal"; color = "orange"; }
+            else { desc = "Panas / Overheat (Sirkulasi Panas Gagal)"; color = "var(--accent-pink)"; }
+
+            let box = document.getElementById('testResultBox');
+            box.classList.remove('hidden');
+            box.innerHTML = `<b>[TEST REPORT]</b><br>Suhu Ruangan: ${ambient}°C<br>Estimasi Suhu Sisi Dingin: <b style="color:${color}">${coldSide.toFixed(1)} °C</b><br>Status: <span style="color:${color}">${desc}</span>`;
+        }
+
+        function runReverse() {
+            let target = parseFloat(document.getElementById('targetWatt').value) || 20;
+            let recPeltier = target > 40 ? "TEC1-12706 (Monster 12V 6A)" : "TEC1-12702 SENIOR (40x40x5mm)";
+            let recPower = target > 40 ? "GaN Charger 65W PPS" : "Decoy Trigger Switch (12V 3A)";
+            let recHS = target > 35 ? "Heatsink Alumunium Bersirip 6x6cm" : "Heatsink Alumunium Bersirip 5x5cm";
+
+            let res = document.getElementById('reverseResult');
+            res.classList.remove('hidden');
+            res.innerHTML = `<b>Rekomendasi Rakitan untuk Target ${target} Watt:</b><br>` +
+                            `• Power: ${recPower}<br>` +
+                            `• Peltier: ${recPeltier}<br>` +
+                            `• Heatsink: ${recHS}<br>` +
+                            `• Kipas: Fan 50x50mm High RPM<br>` +
+                            `<i style="color:var(--accent-green)">Racikan lengkap & tersimpan otomatis!</i>`;
+        }
+
+        window.onload = function() {
+            loadData();
+            calculateManual();
+        };
+    </script>
+</body>
+</html>
